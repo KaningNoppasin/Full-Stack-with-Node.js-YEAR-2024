@@ -27,5 +27,16 @@ app.put('/myPut', (req, res) => {
     res.send(req.body);
 });
 
+app.put('/updateCustomer/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const data = req.body;
+
+    // res.send(`id = ${id} data = ${data}`)
+    res.send({ id: id, data: data});
+});
+
+app.delete('/myDelete/:id', (req, res) => {
+    res.send(`id = ${req.params.id}`);
+})
 
 app.listen(3001);
