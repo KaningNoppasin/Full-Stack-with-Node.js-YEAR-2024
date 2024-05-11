@@ -19,4 +19,5 @@ model Book{
   name String
   price Int
   detail String?
+  registerDate DateTime?
 }
