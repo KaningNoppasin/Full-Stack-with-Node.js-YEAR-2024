@@ -13,11 +13,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Book{
-  id Int @id() @default(autoincrement())
-  isbn String
-  name String
-  price Int
-  detail String?
+model Book {
+  id           Int           @id() @default(autoincrement())
+  isbn         String
+  name         String
+  price        Int
+  detail       String?
   registerDate DateTime?
+  OrderDetail  OrderDetail[]
+}
+
+model Customer {
+  id      Int     @id() @default(autoincrement())
+  name    String
+  phone   String
+  address String
+  Order   Order[]
+}
+
+model Order {
+  id          Int           @id() @default(autoincrement())
+  orderDate   DateTime
+  payDate     DateTime?
+  customerId  Int
+  Customer    Customer      @relation(fields: [customerId], references: [id])
+  OrderDetail OrderDetail[]
+}
+
+model OrderDetail {
+  id      Int   @id() @default(autoincrement())
+  orderId Int
+  Order   Order @relation(fields: [orderId], references: [id])
+  bookId  Int
+  Book    Book  @relation(fields: [bookId], references: [id])
 }

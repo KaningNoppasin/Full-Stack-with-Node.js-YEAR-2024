@@ -12,6 +12,35 @@ dotenv.config();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+// Day7 : ORM Relations, PDF, Excel, Middleware, CORS
+
+const bookController = require('./controllers/BookController');
+app.use('/book', bookController)
+
+function checkSingIn(req, res, next){
+    try {
+        const secret = process.env.TOKEN_SECRET;
+        const token = req.headers['authorization'];
+        const result = jwt.verify(token, secret);
+
+        if (result !== undefined){
+            next();
+        }
+    } catch (e) {
+        res.status(500).send({error: e.message});
+    }
+}
+
+app.get('/user/info', checkSingIn, (req, res, next) => {
+    try {
+        res.send('hello bake office');
+    } catch (e) {
+        res.status(500).send({error: e.message});
+    }
+})
+
+// ---------------------------
+
 app.get('/', (req, res) => {
     res.send('hello world');
 });
@@ -307,7 +336,6 @@ app.get('/book/avg', async (req, res) => {
     }
 });
 
-// ! ---------------------------------------------------------------
 app.get('/book/findYearMonthDay', async (req, res) => {
     try {
         const data = await prisma.book.findMany({
@@ -356,7 +384,6 @@ app.get('/book/findYear', async (req, res) => {
     }
 });
 
-// ! ---------------------------------------------------------------
 
 app.get('/user/createToken', (req, res) => {
     try {
@@ -387,5 +414,53 @@ app.get('/user/verifyToken', (req, res) => {
     }
 });
 
+
+// Day7 : ORM Relations, PDF, Excel, Middleware, CORS
+
+app.get('/oneToOne', async (req, res) => {
+    try {
+        const data = await prisma.orderDetail.findMany({
+            include:{
+                Book: true
+            }
+        });
+
+        res.send({results: data});
+    } catch (e) {
+        res.status(500).send({error: e.message})
+    }
+});
+
+app.get('/oneToMany', async (req, res) => {
+    try {
+        const data = await prisma.book.findMany({
+            include:{
+                OrderDetail: true
+            }
+        });
+
+        res.send({results: data});
+    } catch (e) {
+        res.status(500).send({error: e.message})
+    }
+});
+
+app.get('/multiModel', async (req, res) => {
+    try {
+        const data = await prisma.customer.findMany({
+            include: {
+                Order: {
+                    include: {
+                        OrderDetail: true
+                    }
+                }
+            }
+        });
+
+        res.send({results: data});
+    } catch (e) {
+        res.status(500).send({error: e.message});
+    }
+})
 
 app.listen(3001);
