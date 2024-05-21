@@ -547,8 +547,9 @@ app.get('/createPdf', (req, res) => {
     doc.pipe(fs.createWriteStream('output.pdf'));
 
     doc
+    .font('Kanit/Kanit-Medium.ttf')
         .fontSize(25)
-        .text('Some text adn em', 100, 100);
+        .text('Some text adn em กขคง', 100, 100);
 
     doc
         .addPage()
