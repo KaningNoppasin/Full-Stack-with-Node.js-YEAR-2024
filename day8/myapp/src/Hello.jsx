@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import './Hello.css';
 import MyComponent from "./components/MyComponent";
 import axios from 'axios';
+import config from "./config";
 // import { dayjs } from "dayjs";
 const dayjs = require('dayjs');
 
@@ -69,6 +70,54 @@ function Hello(){
             console.log(e);
         }
     }
+
+    const deleteMethod = async () => {
+        try {
+            await axios.delete('http://localhost:3001/orderDetail/remove/1');
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    const userInfo = async () => {
+        try {
+            // await axios.get('http://localhost:3001/user/info/',{
+            //     headers: {
+            //         'Authorization' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwLCJuYW1lIjoia29iIiwibGV2ZWwiOiJhZG1pbiIsImlhdCI6MTcxNjM3MzM2NiwiZXhwIjoxNzE2NDU5NzY2fQ.zSNdzmYtNAEn19dY0pyLD2ZLcWVBire5ilArctNcJrQ'
+            //     }
+            // });
+            await axios.get(config.apiPath +'/user/info/', config.headersValue);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    const [fileSelected, setFileSelected] = useState({});
+
+    const selectedFile = (fileInput) => {
+        if (fileInput !== undefined){
+            if (fileInput.length > 0){
+                setFileSelected(fileInput[0]);
+            }
+        }
+    }
+
+    const uploadFile = async () => {
+        try {
+            const formData = new FormData();
+            formData.append('myFile', fileSelected);
+
+            await axios.post(config.apiPath + '/book/testUpload', formData, {
+                headers: {
+                    'Content-Type' : 'multipart/form-data'
+                }
+            });
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+
     return (
         <>
             <div>Hello {name}</div>
@@ -136,13 +185,40 @@ function Hello(){
             <div>{dayjs(payDate).format('DD/MM/YYYY')}</div>
 
             <div>
-                <button className="btn btn-primary" onClick={getMethod}>
+                <button className="btn btn-primary mb-2" onClick={getMethod}>
                     Call API GET Method
                 </button>
             </div>
 
-            <button className="btn btn-primary" onClick={postMethod}>Call Api Post</button>
-            <button className="btn btn-primary" onClick={putMethod}>Call Api Put</button>
+            <div>
+                <button className="btn btn-primary mb-2" onClick={postMethod}>Call Api Post</button>
+            </div>
+            <div>
+                <button className="btn btn-primary mb-2" onClick={putMethod}>Call Api Put</button>
+            </div>
+            <div>
+                <button className="btn btn-primary mb-2" onClick={deleteMethod}>Call Api Delete</button>
+            </div>
+            <div>
+                <button className="btn btn-primary mb-2" onClick={userInfo}>User Info</button>
+            </div>
+            <div>
+                <input type="file" onChange={e => selectedFile(e.target.files)} />
+                <button className="btn btn-primary" onClick={uploadFile}>
+                    Upload Now
+                </button>
+            </div>
+
+            <div className="row">
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 1</div>
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 2</div>
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 3</div>
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 4</div>
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 5</div>
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 6</div>
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 7</div>
+                <div className="col-xxl-2 col-xl-2 col-lg-3 col-md col-sm-6 col-xs-12">Cell 8</div>
+            </div>
         </>
     )
 }

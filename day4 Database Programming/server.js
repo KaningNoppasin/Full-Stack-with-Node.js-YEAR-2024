@@ -484,7 +484,7 @@ app.post('/book/testUpload', (req, res) =>{
             res.send({message: "success"});
         })
     } catch (e) {
-        res.status.send({error: e.message});
+        res.status(500).send({error: e.message});
     }
 });
 
@@ -583,6 +583,18 @@ app.get('/readExcel', async (req, res) => {
 
         res.send({message: "success"});
 
+    } catch (e) {
+        res.status(500).send({error: e.message});
+    }
+})
+
+app.delete('/orderDetail/remove/:id', async (req, res) => {
+    try {
+        await prisma.orderDetail.delete({
+            where: {
+                id: parseInt(req.params.id)
+            }
+        })
     } catch (e) {
         res.status(500).send({error: e.message});
     }
