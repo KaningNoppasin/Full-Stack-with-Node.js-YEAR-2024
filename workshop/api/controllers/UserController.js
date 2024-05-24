@@ -7,6 +7,34 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+function checkSignIn(req, res, next) {
+    try {
+        const secret = process.env.TOKEN_SECRET;
+        const token = req.headers['authorization'];
+        const result = jwt.verify(token, secret);
+
+        if (result !== undefined){
+            next();
+        }
+    } catch (e) {
+        res.status(500).send({error:e.message});
+    }
+}
+
+function getUserId(req, res){
+    try {
+        const secret = process.env.TOKEN_SECRET;
+        const token = req.headers['authorization'];
+        const result = jwt.verify(token, secret);
+
+        if (result !== undefined){
+            return result.id;
+        }
+    } catch (e) {
+        res.status(500).send({error:e.message});
+    }
+}
+
 app.post('/signIn', async (req, res) => {
     try {
         if (req.body.user === undefined || req.body.pass === undefined){
@@ -32,6 +60,24 @@ app.post('/signIn', async (req, res) => {
         res.status(401).send({message: "unauthorized"});
     } catch (e) {
         res.status(500).send({error: e.message});
+    }
+});
+
+app.get('/info', checkSignIn, async (req, res, next) => {
+    try {
+        const userId = getUserId(req, res);
+        const user = await prisma.user.findFirst({
+            select:{
+                name: true
+            },
+            where:{
+                id: userId
+            }
+        });
+
+        res.send({result: user});
+    } catch (e) {
+        res.status(500).send({error:e.message});
     }
 });
 

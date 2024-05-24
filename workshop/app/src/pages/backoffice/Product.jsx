@@ -1,6 +1,6 @@
 import BackOffice from "../../components/BackOffice";
 
-function Home() {
+function Product(){
     return (
         <>
             <BackOffice/>
@@ -8,4 +8,4 @@ function Home() {
     )
 }
 
-export default Home;
+export default Product;
