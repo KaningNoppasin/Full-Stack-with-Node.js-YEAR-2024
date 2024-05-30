@@ -27,19 +27,42 @@ function Product(){
             product.img = "";
             product.price = parseInt(product.price);
             product.cost = parseInt(product.cost);
-            await axios.post(config.apiPath + '/product/create', product, config.headers())
-                .then((res) => {
-                    if (res.data.message === 'success'){
-                        Swal.fire({
-                            title: 'Save',
-                            text: 'Success',
-                            icon: 'success',
-                            timer: 1000
-                        })
-                        document.getElementById("modalProduct_btnClose").click();
-                        fetchData();
-                    }
+
+            // let res;
+            // if (product.id !== undefined){
+            //     res = await axios.put(config.apiPath + '/product/edit/' + product.id, product, config.headers())
+            // }else{
+                // res = await axios.post(config.apiPath + '/product/create', product, config.headers())
+            // }
+
+            const res = product.id !== undefined
+                            ? await axios.put(config.apiPath + '/product/update', product, config.headers())
+                            : await axios.post(config.apiPath + '/product/create', product, config.headers())
+
+            if (res.data.message === 'success'){
+                Swal.fire({
+                    title: 'Save',
+                    text: 'Success',
+                    icon: 'success',
+                    timer: 1000
                 })
+                document.getElementById("modalProduct_btnClose").click();
+                fetchData();
+                setProduct({ ...product, id: undefined})
+            }
+            // await axios.post(config.apiPath + '/product/create', product, config.headers())
+            //     .then((res) => {
+            //         if (res.data.message === 'success'){
+            //             Swal.fire({
+            //                 title: 'Save',
+            //                 text: 'Success',
+            //                 icon: 'success',
+            //                 timer: 1000
+            //             })
+            //             document.getElementById("modalProduct_btnClose").click();
+            //             fetchData();
+            //         }
+            //     })
         } catch (e) {
             alertError(e);
         }
@@ -53,12 +76,37 @@ function Product(){
         })
     }
 
+    const handleRemove = async (item) => {
+        Swal.fire({
+            text: 'remove item',
+            title: 'remove',
+            icon: 'question',
+            showCancelButton: true,
+            showConfirmButton: true
+        }).then(async (res) => {
+            if(res.isConfirmed){
+                await axios.delete(config.apiPath + '/product/remove/' + item.id,config.headers())
+                    .then((res) => {
+                        if (res.data.message === "success"){
+                            Swal.fire({
+                                title: 'remove',
+                                text: 'remove success',
+                                icon: 'success',
+                                timer: 1000
+                            });
+                            fetchData();
+                        }
+                    })
+            }
+        }).catch((e) => alertError(e))
+    }
+
     const fetchData = async () => {
         try {
             await axios.get(config.apiPath + '/product/list', config.headers())
                 .then((res) => {
-                    if (res.data.result !== undefined){
-                        setProducts(res.data.result)
+                    if (res.data.results !== undefined){
+                        setProducts(res.data.results)
                     }
                 })
         } catch (e) {
@@ -74,6 +122,41 @@ function Product(){
                     <i className="fa fa-plus mr-2"></i>
                     Add item
                 </button>
+                <button className="btn btn-success ml-2">
+                    <i className="fa fa-arrow-down mr-2"></i>
+                    Import Excel
+                </button>
+
+                <table className="mt-3 table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>name</th>
+                            <th width="150px" className="text-right">cost</th>
+                            <th width="150px" className="text-right">price</th>
+                            <th width="140px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {products.length > 0 ? products.map((item) =>
+                            <tr>
+                                <td>{item.name}</td>
+                                <td className="text-right">{item.cost}</td>
+                                <td className="text-right">{item.price}</td>
+                                <td className="text-center">
+                                    <button className="btn btn-primary mr-2" data-toggle="modal" data-target="#modalProduct" onClick={(e) => setProduct(item)}>
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <button className="btn btn-danger" onClick={(e) => handleRemove(item)}>
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        ) : <></>}
+                    </tbody>
+                </table>
+
+
+
                 <MyModal id="modalProduct" title="Product">
                     <div>
                         <div>Name:</div>
