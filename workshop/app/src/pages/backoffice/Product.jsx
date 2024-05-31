@@ -16,6 +16,7 @@ function Product(){
 
     const [product, setProduct] = useState({});
     const [products, setProducts] = useState([]);
+    const [img, setImg] = useState({});
 
     useEffect(() => {
         fetchData();
@@ -24,9 +25,11 @@ function Product(){
     const handleSave = async () => {
         try {
             // setProduct({...product, img: ""});
-            product.img = "";
+            product.img = await handleUpload();
             product.price = parseInt(product.price);
             product.cost = parseInt(product.cost);
+
+            // console.log("await handleUpload():",await handleUpload());
 
             // let res;
             // if (product.id !== undefined){
@@ -68,12 +71,47 @@ function Product(){
         }
     }
 
+    const handleUpload = async () => {
+        // const formData = new FormData();
+        // formData.append('img', img);
+        // await axios.post(config.apiPath + '/product/upload', formData, {
+        //     headers: {
+        //         'Content-Type': 'multipart/form-data',
+        //         'Authorization': localStorage.getItem('token')
+        //     }
+        // })
+        //     .then((res) => {
+        //         if (res.data.newName !== undefined) {
+        //             return res.data.newName;
+        //         }
+        //     })
+        //     .catch((e) => alertError(e))
+
+        try {
+            const formData = new FormData();
+            formData.append('img', img);
+            const res = await axios.post(config.apiPath + '/product/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': localStorage.getItem('token')
+                }
+            })
+            if (res.data.newName !== undefined){
+                return res.data.newName;
+            }
+        } catch (e) {
+            alertError(e);
+            return "";
+        }
+    }
+
     const clearForm = () => {
         setProduct({
             name: '',
             price: '',
             cost: ''
-        })
+        });
+        setImg({});
     }
 
     const handleRemove = async (item) => {
@@ -99,6 +137,14 @@ function Product(){
                     })
             }
         }).catch((e) => alertError(e))
+    }
+
+    const selectedFile = (inputFile) => {
+        if (inputFile !== undefined){
+            if (inputFile.length > 0){
+                setImg(inputFile[0]);
+            }
+        }
     }
 
     const fetchData = async () => {
@@ -130,6 +176,7 @@ function Product(){
                 <table className="mt-3 table table-bordered table-striped">
                     <thead>
                         <tr>
+                            <th>Picture</th>
                             <th>name</th>
                             <th width="150px" className="text-right">cost</th>
                             <th width="150px" className="text-right">price</th>
@@ -138,7 +185,12 @@ function Product(){
                     </thead>
                     <tbody>
                         {products.length > 0 ? products.map((item) =>
-                            <tr>
+                            <tr key={item.id}>
+                                <td>
+                                    {item.img !== undefined
+                                        ? <img className="img-fluid" src={config.apiPath + '/uploads/' + item.img} alt="" width="100px"/>
+                                        : <></>}
+                                </td>
                                 <td>{item.name}</td>
                                 <td className="text-right">{item.cost}</td>
                                 <td className="text-right">{item.price}</td>
@@ -172,7 +224,7 @@ function Product(){
                     </div>
                     <div>
                         <div>Picture:</div>
-                        <input className="form-control-file mb-2" type="file" />
+                        <input className="form-control-file mb-2" type="file" onChange={(e) => selectedFile(e.target.files)}/>
                     </div>
                     <div>
                         <button className="btn btn-primary float-right" onClick={handleSave}>
