@@ -37,10 +37,36 @@ app.get('/list', async (req, res) => {
         .catch((e) => res.status(500).send({error: e.message}))
 })
 
+app.get('/listTrash', async (req, res) => {
+    await prisma.product.findMany({
+        orderBy:{
+            id: 'desc'
+        },
+        where: {
+            status: 'delete'
+        }
+    })
+        .then((results) => res.send({results: results}))
+        .catch((e) => res.status(500).send({error: e.message}))
+})
+
 app.delete('/remove/:id', async (req, res) => {
     await prisma.product.update({
         data: {
             status: 'delete'
+        },
+        where: {
+            id: parseInt(req.params.id)
+        }
+    })
+        .then(res.send({message: 'success'}))
+        .catch((e) => res.status(500).send({error: e.message}))
+})
+
+app.delete('/restore/:id', async (req, res) => {
+    await prisma.product.update({
+        data: {
+            status: 'use'
         },
         where: {
             id: parseInt(req.params.id)

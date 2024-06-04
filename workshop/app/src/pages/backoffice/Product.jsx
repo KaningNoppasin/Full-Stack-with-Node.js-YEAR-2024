@@ -16,6 +16,7 @@ function Product(){
 
     const [product, setProduct] = useState({});     // Create Update
     const [products, setProducts] = useState([]);   //Show
+    const [productTrash, setProductTrash] = useState([]);   //Trash
     const [img, setImg] = useState({});
     const [fileExcel, setFileExcel] = useState({})
     const refImg = useRef();
@@ -160,9 +161,48 @@ function Product(){
                         setProducts(res.data.results)
                     }
                 })
+            fetchTrash();
         } catch (e) {
             alertError(e);
         }
+    }
+
+    const fetchTrash = async () => {
+        try {
+            await axios.get(config.apiPath + '/product/listTrash', config.headers())
+                .then((res) => {
+                    if (res.data.results !== undefined){
+                        setProductTrash(res.data.results)
+                    }
+                })
+        } catch (e) {
+            alertError(e);
+        }
+    }
+
+    const handleRestore = (item) => {
+        Swal.fire({
+            text: 'Restore item',
+            title: 'Restore',
+            icon: 'question',
+            showCancelButton: true,
+            showConfirmButton: true
+        }).then(async (res) => {
+            if(res.isConfirmed){
+                await axios.delete(config.apiPath + '/product/restore/' + item.id,config.headers())
+                    .then((res) => {
+                        if (res.data.message === "success"){
+                            Swal.fire({
+                                title: 'remove',
+                                text: 'remove success',
+                                icon: 'success',
+                                timer: 1000
+                            });
+                            fetchData();
+                        }
+                    })
+            }
+        }).catch((e) => alertError(e))
     }
 
     const clearFormExcel = () => {
@@ -209,6 +249,11 @@ function Product(){
                 <button onClick={clearFormExcel} className="btn btn-success ml-2" data-toggle="modal" data-target="#modalExcel">
                     <i className="fa fa-arrow-down mr-2"></i>
                     Import Excel
+                </button>
+                <button className="btn btn-secondary ml-2 float-right" data-toggle="modal" data-target="#modalTrash">
+                    {/* <i class="fa-regular fa-trash mr-2"></i> */}
+                    <i class="fa fa-trash mr-2"></i>
+                    Trash
                 </button>
 
                 <table className="mt-3 table table-bordered table-striped">
@@ -279,6 +324,40 @@ function Product(){
                     <button className="btn btn-primary mt-3 float-right" onClick={handleUploadExcel}>
                         <i class="fa fa-check mr-2"></i>Save
                     </button>
+                </MyModal>
+
+                <MyModal id='modalTrash' title='Trash'>
+                    <table className="mt-3 table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th width="150px">Picture</th>
+                                <th>name</th>
+                                <th width="150px" className="text-right">cost</th>
+                                <th width="150px" className="text-right">price</th>
+                                <th width="140px">Restore</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {productTrash.length > 0 ? productTrash.map((item) =>
+                                <tr key={item.id}>
+                                    <td>
+                                        {item.img !== ""
+                                            ? <img className="img-fluid" src={config.apiPath + '/uploads/' + item.img} alt=""/>
+                                            : <img className="img-fluid" src={config.apiPath + '/uploads/defaultPic.png'} alt=""/>}
+                                    </td>
+                                    <td>{item.name}</td>
+                                    <td className="text-right">{item.cost}</td>
+                                    <td className="text-right">{item.price}</td>
+                                    <td className="text-center">
+                                        <button className="btn btn-success mr-2" onClick={(e) => handleRestore(item)}>
+                                            {/* <i class="fa fa-edit"></i> */}
+                                            <i class="fas fa-trash-restore"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ) : <></>}
+                        </tbody>
+                    </table>
                 </MyModal>
             </BackOffice>
         </>
