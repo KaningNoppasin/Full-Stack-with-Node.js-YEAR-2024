@@ -246,14 +246,17 @@ function Product(){
                     <i className="fa fa-plus mr-2"></i>
                     Add item
                 </button>
+
                 <button onClick={clearFormExcel} className="btn btn-success ml-2" data-toggle="modal" data-target="#modalExcel">
                     <i className="fa fa-arrow-down mr-2"></i>
                     Import Excel
                 </button>
+
                 <button className="btn btn-secondary ml-2 float-right" data-toggle="modal" data-target="#modalTrash">
                     {/* <i class="fa-regular fa-trash mr-2"></i> */}
                     <i class="fa fa-trash mr-2"></i>
                     Trash
+                    ( {productTrash.length} )
                 </button>
 
                 <table className="mt-3 table table-bordered table-striped">
@@ -350,7 +353,6 @@ function Product(){
                                     <td className="text-right">{item.price}</td>
                                     <td className="text-center">
                                         <button className="btn btn-success mr-2" onClick={(e) => handleRestore(item)}>
-                                            {/* <i class="fa fa-edit"></i> */}
                                             <i class="fas fa-trash-restore"></i>
                                         </button>
                                     </td>
