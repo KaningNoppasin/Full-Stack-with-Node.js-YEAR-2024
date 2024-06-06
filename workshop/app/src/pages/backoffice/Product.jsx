@@ -19,8 +19,24 @@ function Product(){
     const [productTrash, setProductTrash] = useState([]);   //Trash
     const [img, setImg] = useState({});
     const [fileExcel, setFileExcel] = useState({})
+    const [pageIndex, setPageIndex] = useState(1);
     const refImg = useRef();
     const refExcel = useRef();
+
+    const productInOnePage = 4;
+
+    const handlePreviousPage = () => {
+        if (pageIndex - 1 > 0){
+            setPageIndex(pageIndex - 1);
+        }
+    }
+
+    const handleNextPage = () => {
+        if (pageIndex + 1 <= Math.ceil(products.length / productInOnePage)){
+            setPageIndex(pageIndex + 1);
+        }
+    }
+
 
     useEffect(() => {
         fetchData();
@@ -270,7 +286,7 @@ function Product(){
                         </tr>
                     </thead>
                     <tbody>
-                        {products.length > 0 ? products.map((item) =>
+                        {products.length > 0 ? products.slice((productInOnePage * pageIndex) - productInOnePage,productInOnePage * pageIndex).map((item) =>
                             <tr key={item.id}>
                                 <td>
                                     {item.img !== ""
@@ -292,7 +308,11 @@ function Product(){
                         ) : <></>}
                     </tbody>
                 </table>
-
+                <div className="text-center">
+                    <button className="btn" onClick={handlePreviousPage}>&laquo; Previous</button>
+                    {pageIndex}
+                    <button className="btn" onClick={handleNextPage}>Next &raquo;</button>
+                </div>
 
 
                 <MyModal id="modalProduct" title="Product">
