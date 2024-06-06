@@ -310,6 +310,11 @@ function Product(){
                     </div>
                     <div>
                         <div>Picture:</div>
+                        <div className="m-2">
+                            {product.img !== ""
+                                    ? <img className="img-fluid" width="200px" src={config.apiPath + '/uploads/' + product.img} alt=""/>
+                                    : <></>}
+                        </div>
                         <input className="form-control-file mb-2" type="file" ref={refImg} onChange={(e) => selectedFile(e.target.files)}/>
                     </div>
                     <div>
