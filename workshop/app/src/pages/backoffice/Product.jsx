@@ -57,7 +57,7 @@ function Product(){
             // }else{
                 // res = await axios.post(config.apiPath + '/product/create', product, config.headers())
             // }
-
+            console.log(product);
             const res = product.id !== undefined
                             ? await axios.put(config.apiPath + '/product/update', product, config.headers())
                             : await axios.post(config.apiPath + '/product/create', product, config.headers())

@@ -87,7 +87,7 @@ app.put('/update', async (req, res) => {
         }
     })
         .then(async (res) => { // old img name
-            if (fs.existsSync('./uploads/' + res.img)){
+            if (fs.existsSync('./uploads/' + res.img && res.img !== "")){
                 await fs.unlinkSync('./uploads/' + res.img);
             }
         })
