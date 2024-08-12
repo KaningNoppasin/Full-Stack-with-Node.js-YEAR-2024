@@ -28,6 +28,10 @@ function Sidebar() {
                         setUser(res.data.result);
                     }
                 })
+                .catch((err) => {
+                    alertError(err);
+                    navigate('/');
+                })
         } catch (e) {
             alertError(e);
         }

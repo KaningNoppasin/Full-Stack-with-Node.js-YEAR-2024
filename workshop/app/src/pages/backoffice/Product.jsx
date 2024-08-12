@@ -23,7 +23,7 @@ function Product(){
     const refImg = useRef();
     const refExcel = useRef();
 
-    const productInOnePage = 4;
+    const productInOnePage = 8;
 
     const handlePreviousPage = () => {
         if (pageIndex - 1 > 0){
