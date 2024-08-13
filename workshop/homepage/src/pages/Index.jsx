@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import config from '../config';
 import MyModal from '../components/MyModal';
+import dayjs from 'dayjs'
 
 function Index() {
     const alertError = (error) => {
@@ -16,25 +17,24 @@ function Index() {
     const [products, setProducts] = useState([]);
     const [carts, setCarts] = useState([]);
     const [quantityCart, setQuantityCart] = useState(0)
-    // const [sumQty, setSumQty] = useState(0)
     const [sumPrice, setSumPrice] = useState(0)
+    const [customer, setCustomer] = useState({payDate: dayjs(new Date()).format('YYYY-MM-DD')});
+    const [customerValidateError, setCustomerValidateError] = useState({});
 
     useEffect(() => {
         fetchData();
         const itemInCarts = JSON.parse(localStorage.getItem('carts'))
         if (itemInCarts !== null){
-            setCarts(itemInCarts)
-            // setQuantityCart(itemInCarts?.reduce((sum, item) => sum += item.quantity, 0))
-            // computePriceAndPrice();
-            // setSumPrice(itemInCarts?.reduce((sum, item) => sum += item.price * item.quantity,0));
+            setCarts(itemInCarts);
         }else{
             localStorage.setItem('carts', JSON.stringify(carts))
         }
     }, [])
 
     useEffect(() => {
-        setQuantityCart(carts.reduce((sum, item) => sum += item.quantity, 0))
+        setQuantityCart(carts?.reduce((sum, item) => sum += item.quantity, 0))
         setSumPrice(carts?.reduce((sum, item) => sum += item.price * item.quantity,0));
+        localStorage.setItem('carts', JSON.stringify(carts));
     },[carts])
 
     const fetchData = async () => {
@@ -59,27 +59,77 @@ function Index() {
                         ? { ...item, quantity: item.quantity + newItem.quantity }
                         : item
                 );
-                localStorage.setItem('carts', JSON.stringify(updatedCarts))
                 return updatedCarts;
             } else {
                 // Add the new item to the cart
-                localStorage.setItem('carts', JSON.stringify([...prevCarts, newItem]))
                 return [...prevCarts, newItem];
             }
         })
-        // * and then call useEffect
-        // setCarts(JSON.parse(localStorage.getItem('carts')));
-
-        // localStorage.setItem('carts', JSON.stringify(carts))
-        // setQuantityCart(carts.reduce((sum, item) => sum += item.quantity, 0))
-        // setQuantityCart(prevQty => prevQty += 1);
-        // setSumPrice(carts?.reduce((sum, item) => sum += item.price * item.quantity,0));
     }
 
-    // const computePriceAndPrice = () => {
-    //     setSumQty(carts.reduce((sum, item) => sum += item.quantity,0));
-    //     setSumPrice(carts.reduce((sum, item) => sum += item.price,0));
-    // }
+    const handleRemove = (item) => {
+        Swal.fire({
+            title: "Remove",
+            text: "Do you want to remove",
+            icon: 'question',
+            showCancelButton: true,
+            showConfirmButton: true
+        }).then((res) => {
+            if (res.isConfirmed){
+                setCarts(prevCarts => {
+                    for (let i = 0;i < prevCarts.length;i++){
+                        if (prevCarts[i].id === item.id) prevCarts.splice(i, 1);
+                    }
+                    return [...prevCarts];
+                })
+            }
+        }).catch(e => alertError(e))
+    }
+
+    const hadleSave = async (event) => {
+        event.preventDefault();
+        setCustomerValidateError(validateForm())
+        // * customerValidateError.length undefined when {}
+        if (Object.keys(customerValidateError).length === 0){
+            try {
+                console.log("dooo");
+                const payload = {
+                    customerName: customer.name,
+                    customerPhone: customer.phone,
+                    customerAddress: customer.address,
+                    payDate: customer.payDate,
+                    payTime: customer.payTime,
+                    carts: carts
+                }
+                await axios.post(config.apiPath + "/api/sale/save", payload)
+                    .then((res) => {
+                        if (res.data.message === "success"){
+                            localStorage.removeItem('carts');
+                            setQuantityCart(0);
+                            setCarts([]);
+
+                            Swal.fire({
+                                title: "Success",
+                                text: "OK",
+                                icon: 'success',
+                                timer: 1000
+                            })
+                        }
+                    }).catch(e => alertError(e))
+            } catch (e) {
+                alertError(e);
+            }
+        }
+    }
+
+    const validateForm = () => {
+        const err = {};
+        if (!customer.name) err.name = "Name is required"
+        if (!customer.phone) err.phone = "Tel. is required"
+        if (!customer.address) err.address = "Adress is required"
+        if (!customer.payTime) err.payTime = "Pay Time is required"
+        return err;
+    }
 
 
 
@@ -132,7 +182,7 @@ function Index() {
                         </thead>
                         <tbody>
                             { carts.length > 0 ? carts.map((item) =>
-                                <tr>
+                                <tr key={item.id}>
                                     <td>{item.name}</td>
                                     <td>
                                     {item.img !== ""
@@ -142,7 +192,7 @@ function Index() {
                                     <td className='text-end'>{parseInt(item.price).toLocaleString('th-TH')}</td>
                                     <td className='text-end'>{item.quantity}</td>
                                     <td className='text-center'>
-                                        <button className='btn btn-danger'>
+                                        <button className='btn btn-danger' onClick={(e) => handleRemove(item)}>
                                             <i className='fa fa-times'></i>
                                         </button>
                                     </td>
@@ -159,41 +209,45 @@ function Index() {
                                 onClick={() => document.getElementById("modalCart_btnClose").click()}
                                 data-bs-toggle="modal" data-bs-target="#modalForm"
                         >
-                            <i class="fa fa-check me-2" aria-hidden="true"></i>Confirm
+                            <i className="fa fa-check me-2" aria-hidden="true"></i>Confirm
                         </button>
                     </div>
             </MyModal>
 
 
             <MyModal id="modalForm" title="Form">
-            <form className="row g-3 needs-validation" novalidate>
+            <form className="row g-3 needs-validation" onSubmit={hadleSave} noValidate>
                 <div className='col-md-12 alert alert-warning'>
                     <i className="fa fa-university me-2" aria-hidden="true"></i>
                     SCB. 999-999-999
                 </div>
                 <div className="col-md-12 mt-3">
-                    <label for="validationCustom01" className="form-label"><i className="fa fa-user me-2" aria-hidden="true"></i>User Name</label>
-                    <input type="text" className="form-control" id="validationCustom01" required/>
+                    <label htmlFor="validationDefault01" className="form-label"><i className="fa fa-user me-2" aria-hidden="true"></i>User Name</label>
+                    <input type="text" className={`form-control ${customerValidateError.name ? "is-invalid" : customer.name ? "is-valid" : ""}`} id="validationDefault01" value={customer.name} onChange={e => setCustomer({...customer , name:e.target.value})} required/>
+                    {customerValidateError.name && <div className="invalid-feedback">{customerValidateError.name}</div>}
                 </div>
 
                 <div className="col-md-12 mt-3">
-                    <label for="validationCustom01" className="form-label"><i className="fa fa-phone me-2" aria-hidden="true"></i>Tel.</label>
-                    <input type="text" className="form-control" id="validationCustom01" required/>
+                    <label htmlFor="validationDefault02" className="form-label"><i className="fa fa-phone me-2" aria-hidden="true"></i>Tel.</label>
+                    <input type="text" className={`form-control ${customerValidateError.phone ? "is-invalid" : customer.phone ? "is-valid" : ""}`} id="validationDefault02" value={customer.phone} onChange={e => setCustomer({...customer , phone:e.target.value})} required/>
+                    {customerValidateError.phone && <div className="invalid-feedback">{customerValidateError.phone}</div>}
                 </div>
 
                 <div className="col-md-12 mt-3">
-                    <label for="validationCustom01" className="form-label"><i className="fa fa-envelope me-2" aria-hidden="true"></i>Address</label>
-                    <input type="text" className="form-control" id="validationCustom01" required/>
+                    <label htmlFor="validationDefault03" className="form-label"><i className="fa fa-envelope me-2" aria-hidden="true"></i>Address</label>
+                    <input type="text" className={`form-control ${customerValidateError.address ? "is-invalid" : customer.address ? "is-valid" : ""}`} id="validationDefault03" value={customer.address} onChange={e => setCustomer({...customer , address:e.target.value})} required/>
+                    {customerValidateError.address && <div className="invalid-feedback">{customerValidateError.address}</div>}
                 </div>
 
                 <div className="col-md-12 mt-3">
-                    <label for="validationCustom01" className="form-label"><i className="fa fa-calendar me-2" aria-hidden="true"></i>Date</label>
-                    <input type="date" className="form-control" id="validationCustom01" required/>
+                    <label htmlFor="validationDefault04" className="form-label"><i className="fa fa-calendar me-2" aria-hidden="true"></i>Pay Date</label>
+                    <input type="date"  className={`form-control ${customerValidateError.payDate ? "is-invalid" : ""}`} id="validationDefault04" value={customer.payDate} onChange={e => setCustomer({...customer , payDate:e.target.value})} required/>
                 </div>
 
                 <div className="col-md-12 mt-3">
-                    <label for="validationCustom01" className="form-label"><i className="fa fa-clock me-2" aria-hidden="true"></i>Time</label>
-                    <input type="text" className="form-control" id="validationCustom01" placeholder='Ex. 00.00' required/>
+                    <label htmlFor="validationDefault05" className="form-label"><i className="fa fa-clock me-2" aria-hidden="true"></i>Pay Time</label>
+                    <input type="text" className={`form-control ${customerValidateError.payTime ? "is-invalid" : customer.payTime ? "is-valid" : ""}`} id="validationDefault05" placeholder='Ex. 00.00' value={customer.payTime} onChange={e => setCustomer({...customer , payTime:e.target.value})} required/>
+                    {customerValidateError.payTime && <div className="invalid-feedback">{customerValidateError.payTime}</div>}
                 </div>
 
                 <div className="col-12 text-end">
