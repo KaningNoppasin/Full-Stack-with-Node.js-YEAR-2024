@@ -67,6 +67,35 @@ function Index() {
         })
     }
 
+    const adjustQuantity = (targetItem, count) => {
+        setCarts((prevCarts) => {
+            // Check if the item already exists in the cart
+            const itemIndex = prevCarts.findIndex(item => item.id === targetItem.id);
+
+            if (itemIndex !== -1) {
+                const currentQuantity = prevCarts[itemIndex].quantity;
+
+                // Check if the quantity will reach zero or below
+                if (currentQuantity + count <= 0) {
+                    // Call the handleRemove function if the quantity is zero or less
+                    handleRemove(targetItem);
+                    return prevCarts;
+                } else {
+                    // Update the quantity of the existing item
+                    const updatedCarts = prevCarts.map((item, index) =>
+                        index === itemIndex
+                            ? { ...item, quantity: item.quantity + count }
+                            : item
+                    );
+                    return updatedCarts;
+                }
+            } else {
+                // Add the new item to the cart
+                return [...prevCarts, targetItem];
+            }
+        })
+    }
+
     const handleRemove = (item) => {
         Swal.fire({
             title: "Remove",
@@ -88,11 +117,13 @@ function Index() {
 
     const hadleSave = async (event) => {
         event.preventDefault();
-        setCustomerValidateError(validateForm())
+        const currentValidate = validateForm();
+        setCustomerValidateError(currentValidate)
         // * customerValidateError.length undefined when {}
-        if (Object.keys(customerValidateError).length === 0){
+        // * customerValidateError isn't update then use validateForm()
+        if (Object.keys(currentValidate).length === 0){
             try {
-                console.log("dooo");
+                if (Object.keys(carts).length === 0) throw new Error("carts is empty");
                 const payload = {
                     customerName: customer.name,
                     customerPhone: customer.phone,
@@ -105,15 +136,18 @@ function Index() {
                     .then((res) => {
                         if (res.data.message === "success"){
                             localStorage.removeItem('carts');
-                            setQuantityCart(0);
-                            setCarts([]);
-
                             Swal.fire({
                                 title: "Success",
                                 text: "OK",
                                 icon: 'success',
                                 timer: 1000
                             })
+                            setCustomerValidateError({});
+                            setCustomer({payDate: dayjs(new Date()).format('YYYY-MM-DD')});
+
+                            setQuantityCart(0);
+                            setCarts([]);
+                            document.getElementById("modalForm_btnClose").click();
                         }
                     }).catch(e => alertError(e))
             } catch (e) {
@@ -190,7 +224,11 @@ function Index() {
                                             : <img className="card-img-top" style={{ height: '70px', width: 'auto' }} src={config.apiPath + '/uploads/defaultPic.png'} alt="" />}
                                     </td>
                                     <td className='text-end'>{parseInt(item.price).toLocaleString('th-TH')}</td>
-                                    <td className='text-end'>{item.quantity}</td>
+                                    <td className='text-center' width="120px">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" onClick={e => adjustQuantity(item, 1)}><i className="fas fa-plus"></i></button>
+                                        {item.quantity}
+                                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onClick={e => adjustQuantity(item, -1)}><i className="fas fa-minus"></i></button>
+                                    </td>
                                     <td className='text-center'>
                                         <button className='btn btn-danger' onClick={(e) => handleRemove(item)}>
                                             <i className='fa fa-times'></i>
@@ -223,19 +261,19 @@ function Index() {
                 </div>
                 <div className="col-md-12 mt-3">
                     <label htmlFor="validationDefault01" className="form-label"><i className="fa fa-user me-2" aria-hidden="true"></i>User Name</label>
-                    <input type="text" className={`form-control ${customerValidateError.name ? "is-invalid" : customer.name ? "is-valid" : ""}`} id="validationDefault01" value={customer.name} onChange={e => setCustomer({...customer , name:e.target.value})} required/>
+                    <input type="text" className={`form-control ${customerValidateError.name ? "is-invalid" : customer.name ? "is-valid" : ""}`} id="validationDefault01" value={customer.name ? customer.name : ""} onChange={e => setCustomer({...customer , name:e.target.value})} required/>
                     {customerValidateError.name && <div className="invalid-feedback">{customerValidateError.name}</div>}
                 </div>
 
                 <div className="col-md-12 mt-3">
                     <label htmlFor="validationDefault02" className="form-label"><i className="fa fa-phone me-2" aria-hidden="true"></i>Tel.</label>
-                    <input type="text" className={`form-control ${customerValidateError.phone ? "is-invalid" : customer.phone ? "is-valid" : ""}`} id="validationDefault02" value={customer.phone} onChange={e => setCustomer({...customer , phone:e.target.value})} required/>
+                    <input type="text" className={`form-control ${customerValidateError.phone ? "is-invalid" : customer.phone ? "is-valid" : ""}`} id="validationDefault02" value={customer.phone ? customer.phone : ""} onChange={e => setCustomer({...customer , phone:e.target.value})} required/>
                     {customerValidateError.phone && <div className="invalid-feedback">{customerValidateError.phone}</div>}
                 </div>
 
                 <div className="col-md-12 mt-3">
                     <label htmlFor="validationDefault03" className="form-label"><i className="fa fa-envelope me-2" aria-hidden="true"></i>Address</label>
-                    <input type="text" className={`form-control ${customerValidateError.address ? "is-invalid" : customer.address ? "is-valid" : ""}`} id="validationDefault03" value={customer.address} onChange={e => setCustomer({...customer , address:e.target.value})} required/>
+                    <input type="text" className={`form-control ${customerValidateError.address ? "is-invalid" : customer.address ? "is-valid" : ""}`} id="validationDefault03" value={customer.address ? customer.address : ""} onChange={e => setCustomer({...customer , address:e.target.value})} required/>
                     {customerValidateError.address && <div className="invalid-feedback">{customerValidateError.address}</div>}
                 </div>
 
@@ -246,7 +284,7 @@ function Index() {
 
                 <div className="col-md-12 mt-3">
                     <label htmlFor="validationDefault05" className="form-label"><i className="fa fa-clock me-2" aria-hidden="true"></i>Pay Time</label>
-                    <input type="text" className={`form-control ${customerValidateError.payTime ? "is-invalid" : customer.payTime ? "is-valid" : ""}`} id="validationDefault05" placeholder='Ex. 00.00' value={customer.payTime} onChange={e => setCustomer({...customer , payTime:e.target.value})} required/>
+                    <input type="text" className={`form-control ${customerValidateError.payTime ? "is-invalid" : customer.payTime ? "is-valid" : ""}`} id="validationDefault05" placeholder='Ex. 00.00' value={customer.payTime ? customer.payTime : ""} onChange={e => setCustomer({...customer , payTime:e.target.value})} required/>
                     {customerValidateError.payTime && <div className="invalid-feedback">{customerValidateError.payTime}</div>}
                 </div>
 

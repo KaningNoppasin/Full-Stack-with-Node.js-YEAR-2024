@@ -15,7 +15,7 @@ datasource db {
 
 model User {
   id     Int    @id() @default(autoincrement())
-  name   String
+  name   String @unique()
   user   String
   pass   String
   status String @default("use")
@@ -38,7 +38,7 @@ model BillSale {
   customerAddress String
   payDate         DateTime
   payTime         String
-  status          String           @default("wait") // wait, pay, send
+  status           String           @default("wait") // wait, pay, send
   BillSaleDetail  BillSaleDetail[]
 }
 
@@ -50,5 +50,5 @@ model BillSaleDetail {
   BillSale   BillSale @relation(fields: [billSaleId], references: [id])
   cost       Int
   price      Int
-  // quantity   Int
+  quantity   Int
 }

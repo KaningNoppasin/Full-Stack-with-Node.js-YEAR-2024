@@ -109,12 +109,14 @@ function Sidebar() {
                                 {/* </a> */}
                             </li>
                             <li class="nav-item">
-                                <a href="pages/gallery.html" class="nav-link">
-                                    <i class="nav-icon far fa-image"></i>
+                                {/* <a href="pages/gallery.html" class="nav-link"> */}
+                                <Link to="/billSale" class="nav-link">
+                                    <i class="nav-icon fa fa-list"></i>
                                     <p>
-                                        Gallery
+                                        BillSale
                                     </p>
-                                </a>
+                                </Link>
+                                {/* </a> */}
                             </li>
                             <li class="nav-item">
                                 <a href="pages/kanban.html" class="nav-link">

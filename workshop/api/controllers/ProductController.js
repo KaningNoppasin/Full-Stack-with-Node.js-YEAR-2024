@@ -139,32 +139,38 @@ app.post('/upload', async (req, res) => {
 app.post('/uploadFromExcel', async (req, res) => {
     try {
         const fileExcel = req.files.fileExcel;
-        fileExcel.mv('./uploads/' + fileExcel.name,async (err) => {
-            if (err) throw err;
 
-            const workbook = new exceljs.Workbook();
-            await workbook.xlsx.readFile('./uploads/' + fileExcel.name);
-
-            const ws = workbook.getWorksheet(1);
-            for (let i = 2; i <= ws.rowCount; i++){
-                const name = ws.getRow(i).getCell(1).value ?? "";
-                const cost = ws.getRow(i).getCell(2).value ?? 0;
-                const price = ws.getRow(i).getCell(3).value ?? 0;
-                if (name !== "" && cost >= 0 && price >= 0){
-                    await prisma.product.create({
-                        data: {
-                            name: name,
-                            cost: cost,
-                            price: price,
-                            img: "",
-                        }
-                    })
+        if (fileExcel !== undefined || fileExcel !== null){
+            fileExcel.mv('./uploads/' + fileExcel.name,async (err) => {
+                if (err) throw err;
+    
+                const workbook = new exceljs.Workbook();
+                await workbook.xlsx.readFile('./uploads/' + fileExcel.name);
+    
+                const ws = workbook.getWorksheet(1);
+                for (let i = 2; i <= ws.rowCount; i++){
+                    const name = ws.getRow(i).getCell(1).value ?? "";
+                    const cost = ws.getRow(i).getCell(2).value ?? 0;
+                    const price = ws.getRow(i).getCell(3).value ?? 0;
+                    if (name !== "" && cost >= 0 && price >= 0){
+                        await prisma.product.create({
+                            data: {
+                                name: name,
+                                cost: cost,
+                                price: price,
+                                img: "",
+                            }
+                        })
+                    }
                 }
-            }
-            const fs = require('fs');
-            await fs.unlinkSync('./uploads/' + fileExcel.name);
-            res.send({message: 'success'})
-        });
+                const fs = require('fs');
+                await fs.unlinkSync('./uploads/' + fileExcel.name);
+                res.send({message: 'success'})
+            });
+        }
+        else{
+            res.status(500).send({message: 'fileExcel is null or undefined'})
+        }
     } catch (e) {
         res.status(500).send({error: e.message})
     }
