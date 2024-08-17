@@ -1,6 +1,59 @@
+import { useState } from "react";
 import BackOffice from "../../components/BackOffice";
+import MyModal from "../../components/MyModal";
+import { useEffect } from "react";
+import Swal from "sweetalert2";
+import axios from "axios";
+import config from "../../config";
+import dayjs from "dayjs";
 
 function BillSale(){
+    const [billSale, setBillSale] = useState([]);
+    const [billSaleDetails, setBillSaleDetails] = useState([]);
+    const [sumPrice, setSumPrice] = useState(0);
+    const [sumQuantity, setSumQuantity] = useState(0);
+
+    useEffect(() => {
+        fetchData();
+    },[])
+
+    const alertError = (error) => {
+        Swal.fire({
+            title: 'Error',
+            text: error.message,
+            icon: 'error'
+        });
+    }
+
+    const fetchData = async () => {
+        try {
+            const res = await axios.get(config.apiPath + "/api/sale/list",config.headers());
+            if (res.data.results !== undefined){
+                setBillSale(res.data.results);
+            }
+        } catch (e) {
+            alertError(e);
+        }
+    }
+
+    const openModalInfo = async (id) => {
+        try {
+            const res = await axios.get(config.apiPath + "/api/sale/billInfo/" + id, config.headers());
+            if (res.data.results !== undefined){
+                setBillSaleDetails(res.data.results);
+                setSumPrice(
+                    res.data.results.reduce((sum, item) => sum += item.price,0)
+                )
+                setSumQuantity(
+                    res.data.results.reduce((sum, item) => sum += item.quantity,0)
+                )
+            }
+        } catch (e) {
+            alertError(e);
+        }
+    }
+
+
     return (
         <>
         <BackOffice>
@@ -9,9 +62,75 @@ function BillSale(){
                     <div className="card-title">Bill Sale</div>
                 </div>
                 <div className="card-body">
+                    <table className="table table-bordered table-striped">
+                        <thead>
+                            <th>Customer</th>
+                            <th>Tel.</th>
+                            <th>Address</th>
+                            <th>payDate</th>
+                            <th>patTime</th>
+                            <th width="300px">
+                            List | PayConfirm | Complete | Cancel
+                            </th>
+                        </thead>
+                        <tbody>
+                            {billSale.length > 0 ? billSale.map((item) =>
+                                <tr key={item.id}>
+                                    <td>{item.customerName}</td>
+                                    <td>{item.customerPhone}</td>
+                                    <td>{item.customerAddress}</td>
+                                    <td>{dayjs(new Date(item.payDate)).format('YYYY-MM-DD')}</td>
+                                    <td>{item.payTime}</td>
+                                    <td>
+                                        <button className="btn btn-secondary mr-1" data-toggle="modal" data-target="#modalInfo" onClick={e => openModalInfo(item.id)}>
+                                            <i className="fa fa-file-alt mr-2"></i>
+                                        </button>
+                                        <button className="btn btn-info mr-1">
+                                            <i className="fa fa-check mr-2"></i>
+                                        </button>
+                                        <button className="btn btn-success mr-1">
+                                            <i className="fa fa-file mr-2" aria-hidden="true"></i>
+                                        </button>
+                                        <button className="btn btn-danger mr-1">
+                                            <i className="fa fa-times mr-2" aria-hidden="true"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ) : <></>}
+                        </tbody>
+                    </table>
 
                 </div>
             </div>
+            <MyModal id="modalInfo" title="BillList">
+                <table className="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>List</th>
+                            <th>Image</th>
+                            <th className="text-right">Price</th>
+                            <th>Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {billSaleDetails.length > 0 ? billSaleDetails.map(item =>
+                            <tr key={item.id}>
+                                <td>
+                                    {item.Product.name}
+                                </td>
+                                <td>
+                                    {item.Product.img !== ""
+                                                    ? <img className="card-img-top" style={{ height: '70px', width: 'auto' }} src={config.apiPath + '/uploads/' + item.Product.img} alt="" />
+                                                    : <img className="card-img-top" style={{ height: '70px', width: 'auto' }} src={config.apiPath + '/uploads/defaultPic.png'} alt="" />}
+                                </td>
+                                <td className="text-right">{parseInt(item.price).toLocaleString('th-TH')}</td>
+                                <td className="text-right">{item.quantity}</td>
+                            </tr>
+                        ) : <></>}
+                    </tbody>
+                </table>
+                <div className="text-center">Price : {sumPrice.toLocaleString('th-TH')} Bath | Qty : {sumQuantity}</div>
+            </MyModal>
         </BackOffice>
         </>
     )

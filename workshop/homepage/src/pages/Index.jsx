@@ -115,7 +115,7 @@ function Index() {
         }).catch(e => alertError(e))
     }
 
-    const hadleSave = async (event) => {
+    const handleSave = async (event) => {
         event.preventDefault();
         const currentValidate = validateForm();
         setCustomerValidateError(currentValidate)
@@ -254,7 +254,7 @@ function Index() {
 
 
             <MyModal id="modalForm" title="Form">
-            <form className="row g-3 needs-validation" onSubmit={hadleSave} noValidate>
+            <form className="row g-3 needs-validation" onSubmit={handleSave} noValidate>
                 <div className='col-md-12 alert alert-warning'>
                     <i className="fa fa-university me-2" aria-hidden="true"></i>
                     SCB. 999-999-999

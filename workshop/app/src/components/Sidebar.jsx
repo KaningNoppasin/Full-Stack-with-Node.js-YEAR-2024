@@ -102,7 +102,7 @@ function Sidebar() {
                                     {/* <i class="nav-icon far fa-calendar-alt"></i> */}
                                     <i class="nav-icon fa-box mr-2"></i>
                                     <p>
-                                        สินค้า
+                                        Product
                                         <span class="badge badge-info right">2</span>
                                     </p>
                                 </Link>
