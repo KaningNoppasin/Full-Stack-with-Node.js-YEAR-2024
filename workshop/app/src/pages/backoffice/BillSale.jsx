@@ -53,6 +53,97 @@ function BillSale(){
         }
     }
 
+    const handlePay = async (id) => {
+        try {
+            await Swal.fire({
+                title: "Pay Confirm",
+                text: "Are you sure",
+                icon: 'question',
+                showCancelButton: true,
+                showConfirmButton: true
+            }).then(async (res) => {
+                if (res.isConfirmed){
+                    const res = await axios.put(config.apiPath + "/api/sale/updateStatusToPay/" + id, config.headers());
+                    if (res.data.message === "success"){
+                        Swal.fire({
+                            title:"save",
+                            text: "save success",
+                            icon: "success"
+                        })
+                        fetchData();
+                    }
+                }
+            })
+        } catch (e) {
+            alertError(e);
+        }
+    }
+    const handleSend = async (item) => {
+        try {
+            if (item.status !== "pay") throw new Error("Please Confirm Payment");
+            await Swal.fire({
+                title: "Send Confirm",
+                text: "Are you sure",
+                icon: 'question',
+                showCancelButton: true,
+                showConfirmButton: true
+            }).then(async (res) => {
+                if (res.isConfirmed){
+                    const res = await axios.put(config.apiPath + "/api/sale/updateStatusToSend/" + item.id, config.headers());
+                    if (res.data.message === "success"){
+                        Swal.fire({
+                            title:"save",
+                            text: "save success",
+                            icon: "success"
+                        })
+                        fetchData();
+                    }
+                }
+            })
+        } catch (e) {
+            alertError(e);
+        }
+    }
+    const handleCancel = async (id) => {
+        try {
+            await Swal.fire({
+                title: "Cancel",
+                text: "Are you sure",
+                icon: "warning",
+                showCancelButton: true,
+                showConfirmButton: true
+            }).then(async (res) => {
+                if (res.isConfirmed){
+                    const res = await axios.put(config.apiPath + "/api/sale/updateStatusToCancel/" + id, config.headers());
+                    if (res.data.message === "success"){
+                        Swal.fire({
+                            title:"save",
+                            text: "save success",
+                            icon: "success"
+                        })
+                        fetchData();
+                    }
+                }
+            })
+        } catch (e) {
+            alertError(e);
+        }
+    }
+
+    const displayStatusText = (status) => {
+        if (status === 'wait'){
+            return <div className="badge bg-warning">Waiting for payment</div>
+        }
+        else if (status === 'pay'){
+            return <div className="badge bg-warning">Waiting for Send</div>
+        }
+        else if (status === 'send'){
+            return <div className="badge bg-success">Complete</div>
+        }else{
+            return <div className="badge bg-red">Cancel</div>
+        }
+    }
+
 
     return (
         <>
@@ -69,6 +160,7 @@ function BillSale(){
                             <th>Address</th>
                             <th>payDate</th>
                             <th>patTime</th>
+                            <th>Status</th>
                             <th width="300px">
                             List | PayConfirm | Complete | Cancel
                             </th>
@@ -81,17 +173,18 @@ function BillSale(){
                                     <td>{item.customerAddress}</td>
                                     <td>{dayjs(new Date(item.payDate)).format('YYYY-MM-DD')}</td>
                                     <td>{item.payTime}</td>
+                                    <td>{displayStatusText(item.status)}</td>
                                     <td>
                                         <button className="btn btn-secondary mr-1" data-toggle="modal" data-target="#modalInfo" onClick={e => openModalInfo(item.id)}>
                                             <i className="fa fa-file-alt mr-2"></i>
                                         </button>
-                                        <button className="btn btn-info mr-1">
+                                        <button className="btn btn-info mr-1" onClick={e => handlePay(item.id)} disabled={ item.status !== "wait" ? true : false}>
                                             <i className="fa fa-check mr-2"></i>
                                         </button>
-                                        <button className="btn btn-success mr-1">
+                                        <button className="btn btn-success mr-1" onClick={e => handleSend(item)} disabled={item.status === "send" || item.status === "cancel" ? true : false}>
                                             <i className="fa fa-file mr-2" aria-hidden="true"></i>
                                         </button>
-                                        <button className="btn btn-danger mr-1">
+                                        <button className="btn btn-danger mr-1" onClick={e => handleCancel(item.id)} disabled={ item.status !== "wait" || item.status === "pay" ? true : false}>
                                             <i className="fa fa-times mr-2" aria-hidden="true"></i>
                                         </button>
                                     </td>
