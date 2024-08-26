@@ -120,4 +120,42 @@ app.put('/updateStatusToCancel/:billSaleId', async (req, res) => {
     }
 })
 
+app.get('/dashboard', async (req, res) => {
+    try {
+        let arr = [];
+        const year = new Date().getFullYear();
+
+        for (let i = 1; i <= 12; i++) {
+            const dayInMonth = new Date(year, i, 0).getDate();
+            const billSaleInMonth = await prisma.billSale.findMany({
+                where:{
+                    payDate: {
+                        gte: new Date(`${year}-${i}-01`),
+                        lte: new Date(`${year}-${i}-${dayInMonth}`)
+                    }
+                }
+            })
+            let sumPrice = 0
+            for (let j = 0; j < billSaleInMonth.length; j++) {
+                const billSaleDetails = await prisma.billSaleDetail.aggregate({
+                    _sum:{
+                        price: true
+                    },
+                    where:{
+                        billSaleId: billSaleInMonth[j].id
+                    }
+                })
+                // console.log(i,billSaleDetails);
+                // arr.push({month: i, sumPrice: billSaleDetails._sum.price})
+                sumPrice += billSaleDetails._sum.price;
+            }
+            arr.push({month: i, sumPrice: sumPrice ?? 0})
+        }
+        // console.log(arr);
+        res.send({results: arr});
+    } catch (e) {
+        res.status(500).send({error: e.message})
+    }
+})
+
 module.exports = app;
