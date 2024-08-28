@@ -3,6 +3,8 @@ const app = express.Router();
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 
+const {checkSignIn} = require('../middleware/auth');
+
 app.post('/save', async (req, res) => {
     try {
         // req.body.payDate = new Date(req.body.payDate);
@@ -54,7 +56,7 @@ app.get('/list', async (req, res) => {
     }
 })
 
-app.get('/billInfo/:billSaleId', async (req, res) => {
+app.get('/billInfo/:billSaleId',checkSignIn, async (req, res) => {
     try {
         const results = await prisma.billSaleDetail.findMany({
             include:{
@@ -73,7 +75,7 @@ app.get('/billInfo/:billSaleId', async (req, res) => {
     }
 })
 
-app.put('/updateStatusToPay/:billSaleId', async (req, res) => {
+app.put('/updateStatusToPay/:billSaleId',checkSignIn, async (req, res) => {
     try {
         await prisma.billSale.update({
             data:{
@@ -89,7 +91,7 @@ app.put('/updateStatusToPay/:billSaleId', async (req, res) => {
     }
 })
 
-app.put('/updateStatusToSend/:billSaleId', async (req, res) => {
+app.put('/updateStatusToSend/:billSaleId',checkSignIn, async (req, res) => {
     try {
         await prisma.billSale.update({
             data:{
@@ -104,7 +106,7 @@ app.put('/updateStatusToSend/:billSaleId', async (req, res) => {
         res.status(500).send({error: e.message});
     }
 })
-app.put('/updateStatusToCancel/:billSaleId', async (req, res) => {
+app.put('/updateStatusToCancel/:billSaleId',checkSignIn, async (req, res) => {
     try {
         await prisma.billSale.update({
             data:{
@@ -120,7 +122,7 @@ app.put('/updateStatusToCancel/:billSaleId', async (req, res) => {
     }
 })
 
-app.get('/dashboard', async (req, res) => {
+app.get('/dashboard',checkSignIn, async (req, res) => {
     try {
         let arr = [];
         const year = new Date().getFullYear();

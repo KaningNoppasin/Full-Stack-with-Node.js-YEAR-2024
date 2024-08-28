@@ -5,21 +5,10 @@ const prisma = new PrismaClient();
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 
+const {checkSignIn} = require('../middleware/auth');
+
 dotenv.config();
 
-function checkSignIn(req, res, next) {
-    try {
-        const secret = process.env.TOKEN_SECRET;
-        const token = req.headers['authorization'];
-        const result = jwt.verify(token, secret);
-
-        if (result !== undefined){
-            next();
-        }
-    } catch (e) {
-        res.status(500).send({error:e.message});
-    }
-}
 
 function getUserId(req, res){
     try {
